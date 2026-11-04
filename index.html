@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f2e9">
+  <meta name="description" content="輸入 1–44 之間的卡片編號，查看觀音神諭卡與文字訊息。">
+  <title>觀音神諭卡</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f6f2e9;
+      --paper-deep: #ebe4d6;
+      --ink: #243c34;
+      --muted: #66776d;
+      --jade: #31594a;
+      --jade-dark: #244638;
+      --gold: #b28b4b;
+      --line: rgba(49, 89, 74, .18);
+      --serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+      --sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 50% -20%, rgba(255,255,255,.96), transparent 58%),
+        var(--paper);
+      font-family: var(--sans);
+    }
+    .page { width: min(1040px, calc(100% - 40px)); margin: 0 auto; padding: 48px 0 64px; }
+    header { text-align: center; margin-bottom: 30px; }
+    .eyebrow { color: var(--gold); font-size: .76rem; letter-spacing: .28em; margin: 0 0 12px; }
+    h1 { margin: 0; font: 500 clamp(2rem, 5vw, 3.2rem)/1.25 var(--serif); letter-spacing: .14em; }
+    .intro { margin: 14px 0 0; color: var(--muted); font-size: .98rem; line-height: 1.8; }
+    .lookup {
+      display: flex; align-items: end; justify-content: center; gap: 10px;
+      margin: 28px auto 0; width: min(100%, 440px);
+    }
+    .field { flex: 1; text-align: left; }
+    label { display: block; margin: 0 0 8px 2px; color: var(--muted); font-size: .86rem; }
+    input {
+      display: block; width: 100%; height: 48px; padding: 0 14px;
+      border: 1px solid var(--line); border-radius: 8px; outline: none;
+      background: rgba(255,255,255,.72); color: var(--ink); font: 1rem var(--sans);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input:focus { border-color: var(--jade); box-shadow: 0 0 0 3px rgba(49,89,74,.12); }
+    input::placeholder { color: #9aa49d; }
+    button {
+      height: 48px; padding: 0 22px; border: 0; border-radius: 8px;
+      background: var(--jade); color: white; font: 500 .95rem var(--sans);
+      cursor: pointer; transition: background .2s, transform .2s;
+    }
+    button:hover { background: var(--jade-dark); }
+    button:active { transform: translateY(1px); }
+    button:focus-visible { outline: 3px solid rgba(178,139,75,.55); outline-offset: 3px; }
+    .error { min-height: 1.5em; margin: 8px 2px 0; color: #a4483d; font-size: .88rem; text-align: center; }
+    .result {
+      display: grid; grid-template-columns: minmax(220px, 360px) minmax(0, 1fr);
+      align-items: start; gap: clamp(26px, 5vw, 56px); width: min(100%, 900px);
+      margin: 18px auto 0; padding: clamp(16px, 3vw, 30px);
+      border: 1px solid rgba(178,139,75,.3); border-radius: 14px;
+      background: rgba(255,255,255,.63); box-shadow: 0 18px 55px rgba(46,62,50,.08);
+      animation: appear .35s ease both;
+    }
+    .result[hidden] { display: none; }
+    .card-image { display: block; width: 100%; max-height: 68vh; object-fit: contain; object-position: top center; border-radius: 5px; box-shadow: 0 10px 28px rgba(35,41,34,.16); background: var(--paper-deep); }
+    .meaning { padding: 12px 4px 10px 0; }
+    .card-number { color: var(--gold); font-size: .78rem; letter-spacing: .22em; margin: 0 0 10px; }
+    h2 { margin: 0 0 22px; font: 500 clamp(1.45rem, 3vw, 2rem)/1.5 var(--serif); }
+    .card-text { margin: 0; color: #46564d; font: 1rem/2.05 var(--serif); white-space: pre-line; overflow-wrap: anywhere; }
+    .empty-state { width: min(100%, 760px); margin: 12px auto 0; padding: 34px 20px 30px; text-align: center; color: var(--muted); }
+    .empty-state[hidden] { display: none; }
+    .lotus { color: var(--gold); font: 2.1rem var(--serif); margin-bottom: 8px; }
+    .empty-state p { margin: 0; line-height: 1.9; }
+    footer { margin-top: 34px; color: #89938b; text-align: center; font-size: .76rem; letter-spacing: .08em; }
+    @keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 680px) {
+      .page { width: min(100% - 28px, 520px); padding: 34px 0 44px; }
+      header { margin-bottom: 20px; }
+      .intro { font-size: .9rem; }
+      .lookup { margin-top: 22px; }
+      .result { grid-template-columns: 1fr; gap: 22px; margin-top: 10px; padding: 16px; }
+      .card-image { width: min(100%, 330px); max-height: 58vh; margin: 0 auto; }
+      .meaning { padding: 0 2px 4px; }
+      h2 { margin-bottom: 14px; }
+      .card-text { font-size: .98rem; line-height: 1.95; }
+      .empty-state { padding-top: 24px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>觀音神諭卡</h1>
+      <p class="intro">靜下心來，輸入一張卡片的編號，閱讀它帶來的訊息。</p>
+      <form class="lookup" id="lookup-form" novalidate>
+        <div class="field">
+          <label for="card-number">卡片編號（1–44）</label>
+          <input id="card-number" name="number" type="number" min="1" max="44" step="1" inputmode="numeric" placeholder="請輸入 1–44" autocomplete="off" required>
+        </div>
+        <button type="submit">查看卡片</button>
+      </form>
+      <p class="error" id="error" role="alert" aria-live="polite"></p>
+    </header>
+
+    <section class="empty-state" id="empty-state" aria-live="polite">
+      <div class="lotus" aria-hidden="true">蓮</div>
+      <p>請輸入 1 到 44 之間的整數<br>查看對應的卡片與解說</p>
+    </section>
+
+    <section class="result" id="result" aria-live="polite" hidden>
+      <img class="card-image" id="card-image" alt="">
+      <div class="meaning">
+        <p class="card-number" id="card-number-label"></p>
+        <h2 id="card-title"></h2>
+        <p class="card-text" id="card-meaning"></p>
+      </div>
+    </section>
+    <footer>以一份寧靜的心，遇見此刻的訊息</footer>
+  </main>
+  <script src="data/cards.js"></script>
+  <script>
+    const form = document.querySelector("#lookup-form");
+    const numberInput = document.querySelector("#card-number");
+    const error = document.querySelector("#error");
+    const emptyState = document.querySelector("#empty-state");
+    const result = document.querySelector("#result");
+    const image = document.querySelector("#card-image");
+    const numberLabel = document.querySelector("#card-number-label");
+    const title = document.querySelector("#card-title");
+    const meaning = document.querySelector("#card-meaning");
+    const cardsByNumber = new Map(window.ORACLE_CARDS.map((card) => [card.number, card]));
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      error.textContent = "";
+      const raw = numberInput.value.trim();
+      if (!/^\d+$/.test(raw) || Number(raw) < 1 || Number(raw) > 44) {
+        error.textContent = "請輸入 1 到 44 之間的整數。";
+        numberInput.focus();
+        return;
+      }
+
+      try {
+        const card = cardsByNumber.get(Number(raw));
+        if (!card) throw new Error("找不到這張卡片，請再試一次。");
+        numberLabel.textContent = `第 ${card.number} 張`;
+        title.textContent = card.title.replace(/^\s*\d+\s*[.．、]\s*/, "").trim();
+        meaning.textContent = card.meaning;
+        image.src = `cards/${encodeURIComponent(card.image)}`;
+        image.alt = `第 ${card.number} 張卡：${title.textContent}`;
+        result.hidden = false;
+        emptyState.hidden = true;
+      } catch (loadError) {
+        error.textContent = loadError.message || "目前無法載入卡片，請稍後再試。";
+      }
+    });
+  </script>
+</body>
+</html>
